@@ -1,0 +1,26 @@
+1.安装
+tar -zxvf redis-3.2.11.tar.gz
+cd redis-3.2.11
+make
+make install
+vi redis.conf
+
+#bind 127.0.0.1    #注释掉
+protected-mode no  #保护模式
+daemonize yes      #后台进程启动
+
+2.设置密码
+config set requirepass test123
+auth test123
+config get requirepass
+
+
+redis-cli -p 6379
+auth test123
+
+3.可能出现的问题 
+max number of clients reached, sPort: 0, LastCommand  客户端连接太多
+config get timeout
+config set timeout 600
+瞬间就降下来了。。 至此问题解决！
+
