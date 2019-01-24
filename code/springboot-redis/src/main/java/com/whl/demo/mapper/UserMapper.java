@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 
+import java.util.concurrent.TimeUnit;
+
 @Service("userService")
 public class UserMapper implements UserService{
 
@@ -18,9 +20,10 @@ public class UserMapper implements UserService{
     public void saveUser() {
 
         User user = new User();
-        user.setId("001");
-        user.setName("lisi");
-        stringRedisTemplate.opsForHash().put("user-info-list",user.getId(),JSON.toJSONString(user));
+        user.setId("003");
+        user.setName("zhangwuli");
+        stringRedisTemplate.opsForHash().put("test-user-info-list",user.getId(),JSON.toJSONString(user));
+        stringRedisTemplate.expire("test-user-info-list",1000, TimeUnit.SECONDS);
     }
 
 
