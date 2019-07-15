@@ -1,0 +1,86 @@
+SET Key0 Value0
+SET Key1 Value1
+...
+SET KeyN ValueN
+
+
+cat bb.txt | redis-cli -a  \#\#\!zggc5055  --pipe
+批量导入  
+  
+  
+  
+  
+  
+  
+  
+  由于做性能测试，需要往redis中导出千万级的数据。得知redis-cli工具支持pipeline导入可以达到最佳性能。由于刚接触redis以及对文档的格式不是很了解，走了很多的弯路。
+
+         从官方文档(http://redis.io/topics/mass-insert)我们可以得知数据格式。
+
+Java代码  收藏代码
+*3\r\n            命令起始，定义共3个输入参数  
+$3\r\n            下一个参数字节长度  
+SET\r\n           命令参数  
+$3\r\n             下一个参数字节长度  
+key\r\n           变量参数  
+$5\r\n            下一个参数字节长度  
+value\r\n        值参数  
+  
+注意：此处的\r\n为换行符，不是输入的字符。在这里我耗了很长的时间。。。。英文不好没办法。  
+    用记事本打开后，数据格式如下图所示：
+
+   
+
+ 
+
+   这里我用JAVA代码，供大家参考：
+
+ 
+
+Java代码  收藏代码
+/** 
+     * 格式化成输入字符串 
+     * @param args 
+     * @return 
+     */  
+    private String getString(String... args){  
+        StringBuilder sb = new StringBuilder();  
+        sb.append("*").append(args.length).append("\r\n");  
+        for(String arg : args){  
+            sb.append("$").append(arg.length()).append("\r\n");  
+            sb.append(arg).append("\r\n");  
+        }  
+        return sb.toString();  
+    }  
+      
+    public void initFile2(){  
+        String file= "G:\\2.txt";  
+        BufferedWriter w = null;  
+        StringBuilder sb = new StringBuilder();  
+        try {  
+            w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));  
+            for(int i=10000000 ;i <= 10100000;i++){  
+                if(i/30000 == 0){  
+                    w.flush();  
+                }  
+                sb.setLength(0);  
+                sb.append(this.getString("hmset","usr"+i,"userid","usr"+i,"username","usrname"+i));  
+                w.append(sb.toString());  
+            }  
+        } catch (UnsupportedEncodingException e) {  
+            e.printStackTrace();  
+        } catch (Exception e) {  
+            e.printStackTrace();  
+        } finally{  
+            try {  
+                w.flush();  
+                w.close();  
+            } catch (IOException e) {  
+                e.printStackTrace();  
+            }  
+              
+        }  
+    }  
+ 
+
+    最后，将生成的文本使用     cat 2.txt  | redis-cli --pipe ，导入的效率十分之高。本人在本本的虚拟机上，导入500万条个hashmap（7个KEY），花费43秒时间。
